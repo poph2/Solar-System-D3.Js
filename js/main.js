@@ -2,21 +2,25 @@
 
 // https://www.schemecolor.com/venus-planet-colors.php
 
-var colors = {
-    "sun": "#FC9601",
-    "mercury": "#97979F",
-    "venus": "#BBB7AB",
+var r = 10;
+var Rmin = 0; //3.5 * r;
+var Rmax = window.innerHeight * 1.5/3;
+var R = Rmax / 10;
+
+var star_data = {
+    "sun":      ["Sun",     "#FC9601",  3.04 * r,   0],
 }
 
-var radii = {
-    "sun": 2.84 * 30,
-    "mercury": 0.39 * 30,
-    "venus": 0.78 * 30
-}
-
-var orbitalRadii = {
-    "mercury": 150,
-    "venus": 190,
+var planet_data = {
+    "mercury":  ["Mercury", "#97979F",  0.58 * r,   1.2 * R],
+    "venus":    ["Venus",   "#BBB7AB",  0.98 * r,   2 * R],
+    "earth":    ["Earth",   "#255FDB",  1.00 * r,   3 * R],
+    "mars":     ["Mars",    "#C67B5C",  0.73 * r,   4 * R],
+    "jupiter":  ["Jupiter", "#90614D",  2.04 * r,   5 * R],
+    "saturn":   ["Saturn",  "#A49B72",  1.96 * r,   6 * R],
+    "uranus":   ["Uranus",  "#BBE1E4",  1.60 * r,   7 * R],
+    "neptune":  ["Neptune", "#3E54E8",  1.59 * r,   8 * R],
+    "pluto":    ["Pluto",   "#ddc4af",  0.27 * r,   9 * R],
 }
 
 class Point {
@@ -28,12 +32,12 @@ class Point {
 
 class Body {
 
-    constructor(name, radius, orbitalRadius, orbitalAngle, color) {
-        this.name = name;
-        this.radius = radius;
-        this.orbitalRadius = orbitalRadius;
-        this.orbitalAngle = orbitalAngle;
-        this.color = color;
+    constructor(data, orbitalAngle) {
+        this.name           = data[0];
+        this.color          = data[1];
+        this.radius         = data[2];
+        this.orbitalRadius  = data[3];
+        this.orbitalAngle   = orbitalAngle;
 
         this.center = this.getCenter();
     }
@@ -70,17 +74,30 @@ class Body {
 
 class Star extends Body {
 
-    constructor(name, radius, color) {
-        super(name, radius, 0, 0, color);
+    constructor(data) {
+        super(data, 0);
     }
 
 }
 
 class Planet extends Body {
 
-    constructor(name, radius, orbitalRadius, orbitalAngle, color) {
-        super(name, radius, orbitalRadius, orbitalAngle, color)
+    constructor(data, orbitalAngle) {
+        super(data, orbitalAngle);
     }
+
+    init(svg) {
+
+        svg.append("circle")
+            .attr("class", this.name + "Orbit")
+            .attr("r", this.orbitalRadius)
+            .style("fill", "none")
+            .style("stroke", "rgba(25, 126, 0, 0.25)");
+
+        super.init(svg);
+
+    }
+
 }
 
 //class Position {
@@ -118,8 +135,8 @@ class Planet extends Body {
 
 var spacetime = d3.select('body');
 
-var width = 960,
-    height = 500,
+var width = window.innerWidth,
+    height = window.innerHeight,
     radius = Math.min(width, height);
 
 // Space
@@ -129,23 +146,43 @@ var svg = spacetime.append("svg")
   .append("g")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-sun = new Star("Sun", radii.sun, colors.sun);
+sun = new Star(star_data.sun);
 sun.init(svg)
 
-mercury = new Planet("Mercury", radii.mercury, orbitalRadii.mercury, 90, colors.mercury);
-mercury.init(svg)
+planets = [];
 
-venus = new Planet("Venus", radii.venus, orbitalRadii.venus, 0, colors.venus);
-venus.init(svg)
+for(var key in planet_data) {
+    var planet = new Planet(planet_data[key], 0);
+    planet.init(svg);
+    planets.push(planet);
+}
 
- t = 0;
+//mercury = new Planet(data.mercury, 90);
+//mercury.init(svg)
+
+//venus = new Planet(data.venus, 0);
+//venus.init(svg)
+//
+//earth = new Planet(data.earth, 0);
+//earth.init(svg)
+//
+//mars = new Planet(data.mars, 0);
+//mars.init(svg)
+//
+//jupiter = new Planet(data.jupiter, 0);
+//jupiter.init(svg);
+//
+//pluto = new Planet(data.pluto, 0);
+//pluto.init(svg)
+
+t = 0;
 
 setInterval(function () {
     t += 0.1;
 
-    mercury.update(t);
-
-    venus.update(t/1.8);
+    for(planet of planets) {
+        planet.update(t/1.8);
+    }
 
 }, 10);
 
